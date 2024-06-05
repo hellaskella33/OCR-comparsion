@@ -1,0 +1,17 @@
+method,window_size,levenshtein_distance
+niblack,11,686.5
+sauvola,11,619.48
+niblack,21,664.58
+sauvola,21,615.6
+niblack,31,655.32
+sauvola,31,608.5
+niblack,41,638.26
+sauvola,41,619.56
+niblack,51,637.26
+sauvola,51,613.7
+niblack,61,643.28
+sauvola,61,613.46
+niblack,71,645.42
+sauvola,71,610.32
+niblack,81,641.48
+sauvola,81,618.08
