@@ -2,16 +2,17 @@ import os
 import gdown
 import requests
 import tarfile
+import argparse
 from tqdm import tqdm
 
 MODELS = {
     'en_PP-OCRv4_rec_train': {
         'url': 'https://paddleocr.bj.bcebos.com/PP-OCRv4/english/en_PP-OCRv4_rec_train.tar',
-        'path': '/home/maxkhamuliak/projects/OCR-comparsion/recognition_folder/en_PP-OCRv4_rec_train'
+        'relative_path': 'paddle_models/en_PP-OCRv4_rec_train'
     },
     'en_PP-OCRv3_det_slim_distill_train': {
         'url': 'https://paddleocr.bj.bcebos.com/PP-OCRv3/english/en_PP-OCRv3_det_slim_distill_train.tar',
-        'path': '/home/maxkhamuliak/projects/OCR-comparsion/detection_models/en_PP-OCRv3_det_slim_distill_train'
+        'relative_path': 'paddle_models/en_PP-OCRv3_det_slim_distill_train'
     }
 }
 
@@ -34,10 +35,10 @@ def extract_tar(tar_path, extract_path):
     with tarfile.open(tar_path, 'r') as tar:
         tar.extractall(path=extract_path)
 
-def download_and_extract_model(model_name):
+def download_and_extract_model(model_name, base_path):
     model_info = MODELS[model_name]
     url = model_info['url']
-    path = model_info['path']
+    path = os.path.join(base_path, model_info['relative_path'])
     
     os.makedirs(os.path.dirname(path), exist_ok=True)
     
@@ -54,9 +55,13 @@ def download_and_extract_model(model_name):
     
     print(f"{model_name} downloaded and extracted successfully.")
 
-def main():
+def main(args):
+    base_path = args.base_path
     for model_name in MODELS:
-        download_and_extract_model(model_name)
+        download_and_extract_model(model_name, base_path)
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="Download and extract PaddleOCR models")
+    parser.add_argument("--base_path", type=str, default=".", help="Base path for storing the models")
+    args = parser.parse_args()
+    main(args)

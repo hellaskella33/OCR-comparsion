@@ -30,10 +30,20 @@ from utils.utils import notify_when_ends
 
 initiate_module_logger(LOGS_PATH, __file__, console_level="info")
 
-# Initialize PaddleOCR
+MODELS = {
+    'en_PP-OCRv4_rec_train': {
+        'relative_path': 'paddle_models/en_PP-OCRv4_rec_train'
+    },
+    'en_PP-OCRv3_det_slim_distill_train': {
+        'relative_path': 'paddle_models/en_PP-OCRv3_det_slim_distill_train'
+    }
+}
+
+# Initialize PaddleOCR with relative paths
+base_path = os.path.dirname(os.path.abspath(__file__))  
 ocr = PaddleOCR(
-    rec_model_dir='/home/maxkhamuliak/projects/OCR-comparsion/recognition_folder/en_PP-OCRv4_rec_train',
-    det_model_dir='/home/maxkhamuliak/projects/OCR-comparsion/detection_models/en_PP-OCRv3_det_slim_distill_train',
+    rec_model_dir=os.path.join(base_path, MODELS['en_PP-OCRv4_rec_train']['relative_path']),
+    det_model_dir=os.path.join(base_path, MODELS['en_PP-OCRv3_det_slim_distill_train']['relative_path']),
     use_angle_cls=True,
     lang='en'
 )
@@ -116,6 +126,31 @@ def main(args):
     else:
         send_delete_images_to_be(document)
 
+def main(args):
+    if args.send_bookmarks_to_be:
+        logging.info("I will send bookmarks")
+
+    logging.info(f"Started processing {args.document_id}")
+    logging.info(f"Started extracting text from {args.images_path} images")
+    document_df = cast_images_to_text(os.path.join(LOCAL_IMAGES_PATH, args.images_path))
+
+    document_df["provider"] = args.provider
+    document_df["document_id"] = args.document_id
+    document_df["dates"] = document_df.text.map(extract_dates).map(
+        filter_dates_out_of_range(CONFIG.DATE_RANGE_FROM_TODAY_DATE)).map(filter_invalid_dates).map(format_dates)
+    document_df["bookmarks&confidence"] = predict_bookmarks(document_df)
+    document = Document(args.document_id, args.cclr_id, args.provider, document_df["text"],
+                        extract_bookmarks_from_candidates_df(document_df))
+
+    engine = create_engine(DATABASE_URI, echo=False, future=True)
+    Session = sessionmaker(bind=engine)
+    document.doc_save_to_db(Session, created_by=CREATED_BY_AI_TAG, store_only_document=False)
+
+    if args.send_bookmarks_to_be:
+        send_bookmarks_to_be(document)
+    else:
+        send_delete_images_to_be(document)
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--images_path", help="path to the images of document", type=str, default="test")
@@ -124,10 +159,6 @@ if __name__ == "__main__":
     parser.add_argument("--document_id", type=str, default="".join([str(random()) for i in range(10)]))
     parser.add_argument("--send_bookmarks_to_be", action='store_true', default=False)
     args = parser.parse_args()
-    try:
-        main(args)
-    except Exception as e:
-        logging.error(e, exc_info=True)
-        logging.info("retrying")
-        time.sleep(60)
-        main(args)
+
+    # Process images immediately
+    main(args)
