@@ -2,3 +2,5 @@
 PaddleOCR/
 /home/maxkhamuliak/projects/OCR-comparsion/Paddle
 /home/maxkhamuliak/projects/OCR-comparsion/OCR
+*.pdparams
+*.pdopt
