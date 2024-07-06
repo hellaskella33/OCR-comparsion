@@ -2,5 +2,5 @@
 PaddleOCR/
 /home/maxkhamuliak/projects/OCR-comparsion/Paddle
 /home/maxkhamuliak/projects/OCR-comparsion/OCR
-/home/maxkhamuliak/projects/OCR-comparsion/recognition_folder
-/home/maxkhamuliak/projects/OCR-comparsion/detection_models
+recognition_folder/
+detection_models/
